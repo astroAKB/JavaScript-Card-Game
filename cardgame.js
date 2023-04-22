@@ -5,6 +5,8 @@ const cardObjectDefinitions=[
     {id:4, imagePath:'/imagescard/card-AceSpades.png'},
 ]
 
+const aceId = 4
+
 const cardBackImgPath = '/imagescard/card-back-Blue.png'
 let cards=[]
 const cardContainerElem = document.querySelector('.card-container')
@@ -18,15 +20,136 @@ const numCards = cardObjectDefinitions.length
 
 let cardPositions = []
 
+let gameInProgress = false
+let shufflingInProgess = false
+let cardsRevealed = false
+
+const currentGameStatusElem = document.querySelector('.current-status')
+const scoreContainerElem = document.querySelector('.header-score-container')
+const scoreElem = document.querySelector('.score')
+const roundContainerElem = document.querySelector('.header-round-container')
+const roundElem = document.querySelector('.round')
+
+const winColor = "green"
+const loseColor = "red"
+const primaryColor = "black"
+
+
+let roundNum = 0
+let maxRounds = 4
+let score = 0
+
 loadGame()
 
+function gameOver(){
+    updateStatusElement(scoreContainerElem,"none")
+    updateStatusElement(roundContainerElem,"none")
+
+    const gameOverMessage = `Game Over! Final Score - <span class = 'badge'>${score}</span>
+                             Click 'Play Game' button to play again`
+    
+    updateStatusElement(currentGameStatusElem, "block", primaryColor, gameOverMessage)
+
+    gameInProgress= false
+    playGameButtonElem.disabled =  false
+
+}
+
+function endRound(){
+    setTimeout(() =>{
+        if(roundNum == maxRounds){
+            gameOver()
+            return
+        }
+        else{
+            startRound()
+        }
+    },3000)
+}
+
+function chooseCard(card){
+    if(canChooseCard()){
+        evaluateCardChoice(card)
+        flipCard(card,false)
+
+        setTimeout(()=>{
+            flipCards(false)
+            updateStatusElement(currentGameStatusElem, "block", primaryColor, "Card Positions Revealed")
+
+            endRound()
+        },3000)
+        cardsRevealed = true
+    }
+}
+
+function calculateScoreToAdd(roundNum){
+    if(roundNum == 1){
+        return 100
+    }
+    else if(roundNum == 2){
+        return 50
+    }
+    else if(roundNum == 3){
+        return 25
+    }
+    else if(roundNum == 4){
+        return 10
+    } 
+}
+
+function calculateScore(){
+    const scoreToAdd = calculateScoreToAdd(roundNum)
+    score = score + scoreToAdd
+}
+
+function updateScore(){
+    calculateScore()
+    updateStatusElement(scoreElem, "block", primaryColor, `<span class='badge'>${score}</span>`)
+
+}
+
+function updateStatusElement(elem, display, color, innerHTML)
+{
+    elem.style.display = display
+
+    if(arguments.length > 2){
+        elem.style.color = color
+        elem.innerHTML = innerHTML
+    }
+}
+
+function outputChoiceFeedBack(hit){
+    if(hit){
+        updateStatusElement(currentGameStatusElem, "block", winColor, "Hit!! - Well done!!")
+    }
+    else{
+        updateStatusElement(currentGameStatusElem, "block", loseColor, "Missed!!")
+    }
+}
+
+function evaluateCardChoice(card){
+    if(card.id == aceId){
+        updateScore()
+        outputChoiceFeedBack(true)
+    }
+    else{
+        outputChoiceFeedBack(false)
+    }
+}
+
+function canChooseCard(){
+    return gameInProgress == true && !shufflingInProgess && !cardsRevealed
+}
 
 function loadGame(){
     createCards()
 
     cards = document.querySelectorAll('.card')
 
-    playGameButtonElem.addEventListener('click',()=>startGame())
+    playGameButtonElem.addEventListener('click', ()=>startGame())
+
+    updateStatusElement(scoreContainerElem,"none")
+    updateStatusElement(roundContainerElem,"none")
 }
 
 function startGame(){
@@ -34,16 +157,34 @@ function startGame(){
     startRound()
 }
 function initializeNewGame(){
+    score = 0
+    roundNum = 0
 
+    shufflingInProgess = false
+
+    updateStatusElement(scoreContainerElem, "flex")
+    updateStatusElement(roundContainerElem, "flex")
+
+    updateStatusElement(scoreElem, "block", primaryColor, `Score <span class='badge'>${score}</span>`)
+    updateStatusElement(roundElem, "block", primaryColor, `Round <span class='badge'>${roundNum}</span>`)
 }
 function startRound(){
     initializeNewRound()
     collectCards()
-    // flipCards(true)
+    flipCards(true)
     shuffleCards()
 }
 function initializeNewRound(){
+    roundNum++
+    playGameButtonElem.disabled = true
+    
+    gameInProgress = true 
+    shufflingInProgess = true
+    cardsRevealed = false
 
+    updateStatusElement(currentGameStatusElem, "block", primaryColor, "Shuffling...")
+
+    updateStatusElement(roundElem, "block", primaryColor, `Round <span class='badge'>${roundNum}</span>`)
 }
 function collectCards(){
     transformGridArea(collapsedGridAreaTemplate)
@@ -93,7 +234,9 @@ function shuffleCards(){
 
         if(shuffleCount == 500){
             clearInterval(id)
+            shufflingInProgess = false
             dealCards()
+            updateStatusElement(currentGameStatusElem, "block", primaryColor, "Please click the card that you think is the Ace of Spades...")
         }
         else{
             shuffleCount++
@@ -199,6 +342,12 @@ function createCard(cardItem){
     addCardToGridCell(cardElem)
 
     initializeCardPositions(cardElem)
+
+    attatchClickEventHandlerToCard(cardElem)
+}
+
+function attatchClickEventHandlerToCard(card){
+    card.addEventListener('click', ()=> chooseCard(card))
 }
 
 function initializeCardPositions(card){
