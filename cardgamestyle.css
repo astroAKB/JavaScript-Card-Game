@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400&display=swap');
 :root{
     --card-width: 147px;
     --card-height: 166px;
@@ -6,11 +7,14 @@
 
     --badge-bg-color: darkgrey;
     --primary-color: black;
-    --secondary-color: #ffffff;
+    --secondary-color: #ffffff; 
+
+    --primary-font: 'Quicksand', sans-serif
 
 }
 body{
     height: 100vh;
+    font-family: var(--primary-font);
 }
 
 main{
@@ -105,6 +109,11 @@ header{
 .header-round-info-container{
     display: flex;
     justify-content: space-evenly;
+}
+
+.current-status{
+    font-size: 1.5rem ;
+    text-align: center;
 }
 
 .header-img-container,.header-round-container,.header-score-container,
