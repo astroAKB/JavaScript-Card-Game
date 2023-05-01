@@ -67,7 +67,7 @@ main{
     width: var(--card-width);
     perspective: 1000px;
     cursor: pointer;
-
+    transition: transform 0.6s ease-in-out;
 }
 .card-inner{
     position: relative;
@@ -139,5 +139,11 @@ header{
     color: var(--secondary-color);
     padding: 2px 10px 3px;
     border-radius: 15px ;
-    
+}
+
+.card.shuffle-left{
+    transform: translateX(300px) translateY(40px);
+}
+.card.shuffle-right{
+    transform: translateX(-350px) translateY(-40px);
 }
