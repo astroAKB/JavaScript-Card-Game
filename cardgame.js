@@ -39,7 +39,28 @@ let roundNum = 0
 let maxRounds = 4
 let score = 0
 
+let gameObj = {}
+
+const localStorageGameKey = 'HTA'
+
 loadGame()
+
+function checkForIncompleteGame(){
+    const SerializedGameObj = getLocalStorageItemValue(localStorageGameKey)
+    if(SerializedGameObj){
+        gameObj = getObjectFromJSON(SerializedGameObj)
+
+        if(gameObj.round >= maxRounds){
+            removeLocalStorageItem(localStorageGameKey)
+        }
+        else{
+            if(confirm('Would you like to continue with your last game?')){
+                score = gameObj.score
+                round = gameObj.round
+            }
+        }
+    }
+}
 
 function gameOver(){
     updateStatusElement(scoreContainerElem,"none")
@@ -70,6 +91,7 @@ function endRound(){
 function chooseCard(card){
     if(canChooseCard()){
         evaluateCardChoice(card)
+        saveGameObjectToLocalStorage(score,roundNum)
         flipCard(card,false)
 
         setTimeout(()=>{
@@ -146,6 +168,8 @@ function loadGame(){
 
     cards = document.querySelectorAll('.card')
 
+    cardFlyInEffect( )
+
     playGameButtonElem.addEventListener('click', ()=>startGame())
 
     updateStatusElement(scoreContainerElem,"none")
@@ -159,6 +183,8 @@ function startGame(){
 function initializeNewGame(){
     score = 0
     roundNum = 0
+
+    checkForIncompleteGame()
 
     shufflingInProgess = false
 
@@ -224,12 +250,31 @@ function flipCards(flipToBack){
         })
 }
 
+function cardFlyInEffect(){
+    const id = setInterval(flyIn,5)
+    let cardCount = 0 
+
+    let count =0
+    function flyIn(){
+        count++
+        if(cardCount == numCards){
+            clearInterval(id)
+        }
+        if(count == 1 || count == 250 || count == 500 || count == 750){
+            cardCount++
+            let card = document.getElementById(cardCount)
+            card.classList.remove('fly-in')
+        }
+    }
+}
+
 function removeShuffleClasses(){
     cards.forEach((card) =>{
         card.classList.remove('shuffle-left')
         card.classList.remove('shuffle-right')
     })
 }
+
 
 function animateShuffle(shuffleCount){
     const random1 = Math.floor(Math.random() * numCards) +1
@@ -242,7 +287,7 @@ function animateShuffle(shuffleCount){
         card1.classList.toggle('shuffle-left')
         card1.style.zIndex = 100
     }
-    if(shuffleCount % 10 ==0){
+    if(shuffleCount % 6 ==0){
         card2.classList.toggle('shuffle-right')
         card2.style.zIndex = 200
     }
@@ -339,6 +384,7 @@ function createCard(cardItem){
     const cardBackImg= createElement('img')
 
     addClassToElement(cardElem, 'card')
+    addClassToElement(cardElem, 'fly-in')
     addIdToElement(cardElem , cardItem.id)
 
     addClassToElement(cardInnerElem, 'card-inner')
@@ -420,4 +466,34 @@ function mapCardIdToGridCell(card){
     else if(card.id == 4){
         return '.card-pos-d'
     }
+}
+
+function getSerializedObjectAsJSON(obj){
+    return JSON.stringify(obj)
+}
+
+function getObjectFromJSON(json){
+    return JSON.parse(json)
+}
+
+function updateLocalStorageItem(key,value){
+    localStorage.setItem(key,value)
+}
+
+function removeLocalStorageItem(key){
+    localStorage.removeItem(key)
+}
+
+function getLocalStorageItemValue(key){
+    return localStorage.getItem(key)
+}
+
+function updateGameObject(score,round){
+    gameObj.score = score
+    gameObj.round = round
+}
+
+function saveGameObjectToLocalStorage(score,round){
+    updateGameObject(score,round)
+    updateLocalStorageItem(localStorageGameKey, getSerializedObjectAsJSON(gameObj))
 }
